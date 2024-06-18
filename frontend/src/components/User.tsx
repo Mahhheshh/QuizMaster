@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-import { CurrentQuestion } from "./CurrentQuestion";
-import { LeaderBoard } from "./leaderboard/LeaderBoard";
+// import { CurrentQuestion } from "./CurrentQuestion";
+import { LeaderBoard, LeaderBoardData } from "./leaderboard/LeaderBoard";
 import { Quiz } from "./Quiz";
 import { Link } from "react-router-dom";
+import { Socket } from "socket.io-client";
 
 export const User = () => {
   const [name, setName] = useState("");
@@ -42,7 +43,7 @@ export const User = () => {
           </div>
           <div className="flex flex-col">
             <button
-              className="bg-purple-600 text-white w-64 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
+              className="bg-purple-600 text-white w-64 py-2 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
               style={{ fontSize: "1rem" }}
               onClick={() => {
                 setSubmitted(true);
@@ -52,7 +53,7 @@ export const User = () => {
             </button>
             <Link
               to="/"
-              className="mt-5 bg-purple-600 text-white w-64 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
+              className="mt-5 bg-purple-600 text-white w-64 py-2 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
             >
               Go Back
             </Link>
@@ -65,16 +66,22 @@ export const User = () => {
   return <UserLoggedin code={code} name={name} />;
 };
 
-export const UserLoggedin = ({ name, code }) => {
-  const [socket, setSocket] = useState<null | any>(null);
+export const UserLoggedin = ({
+  name,
+  code,
+}: {
+  name: string;
+  code: string;
+}) => {
+  const [socket, setSocket] = useState<null | Socket>(null);
   const roomId = code;
   const [currentState, setCurrentState] = useState("not_started");
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
-  const [leaderboard, setLeaderboard] = useState([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderBoardData[]>([]);
   const [userId, setUserId] = useState("");
 
   useEffect(() => {
-    const socket = io("https://sum-server.100xdevs.com");
+    const socket = io("http://127.0.0.1:3000");
     setSocket(socket);
 
     socket.on("connect", () => {
@@ -101,6 +108,7 @@ export const UserLoggedin = ({ name, code }) => {
 
     socket.on("leaderboard", (data) => {
       setCurrentState("leaderboard");
+      console.log(data);
       setLeaderboard(data.leaderboard);
     });
     socket.on("problem", (data) => {
@@ -110,9 +118,13 @@ export const UserLoggedin = ({ name, code }) => {
   }, []);
 
   if (currentState === "not_started") {
-    return <div>This quiz hasnt started yet</div>;
+    return <div className="text-slate-600">This quiz hasnt started yet</div>;
   }
+
   if (currentState === "question") {
+    if (!socket) {
+      throw new Error("Unable to Establish connection");
+    }
     return (
       <Quiz
         roomId={roomId}
@@ -128,20 +140,11 @@ export const UserLoggedin = ({ name, code }) => {
   }
 
   if (currentState === "leaderboard") {
-    return (
-      <LeaderBoard
-        leaderboardData={leaderboard.map((x: any) => ({
-          points: x.points,
-          username: x.name,
-          image: x.image,
-        }))}
-      />
-    );
+    return <LeaderBoard leaderboardData={leaderboard} />;
   }
 
   return (
-    <div>
-      <br />
+    <div className="text-slate-600">
       Quiz has ended
       {currentState}
     </div>
