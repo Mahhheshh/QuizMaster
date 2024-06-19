@@ -23,7 +23,7 @@ interface Problem {
     description: string;
     image?: string;
     startTime: number;
-    answer: AllowedSubmissions; // 0, 1, 2, 3
+    answer: AllowedSubmissions;
     options: {
         id: number;
         title: string;
@@ -31,36 +31,37 @@ interface Problem {
     submissions: Submission[]
 }
 export class Quiz {
-    public roomId: string;
+    public quizId: string;
     private hasStarted: boolean;
     private problems: Problem[];
     private activeProblem: number;
     private users: User[];
     private currentState: "leaderboard" | "question" | "not_started" | "ended";
     
-    constructor(roomId: string) {
-        this.roomId = roomId;
+    constructor(quizId: string) {
+        this.quizId = quizId;
         this.hasStarted = false;
         this.problems = []
         this.activeProblem = 0;
         this.users = [];
         this.currentState = "not_started";
-        console.log("room created");
         setInterval(() => {
             this.debug();
-        }, 10000)
+        }, 20000)
     }
+
     debug() {
         console.log("----debug---")
-        console.log(this.roomId)
-        console.log(JSON.stringify(this.problems))
-        console.log(this.users)
+        console.log(`roomId: ${this.quizId}`)
+        console.log('Problem:',JSON.stringify(this.problems))
+        console.log('Joined users', this.users)
         console.log(this.currentState)
-        console.log(this.activeProblem);
+        console.log("Active problem",this.activeProblem);
+        console.log("total problems", this.problems.length);
+        console.log("------------")
     }
     addProblem(problem: Problem) {
         this.problems.push(problem);
-        console.log(this.problems);
     }
     start() {
         this.hasStarted = true;
@@ -72,7 +73,7 @@ export class Quiz {
         this.currentState = "question"
         problem.startTime = new Date().getTime();
         problem.submissions = [];
-        IoManager.getIo().to(this.roomId).emit("problem", {
+        IoManager.getIo().to(this.quizId).emit("problem", {
             problem
         })
         // Todo: clear this if function moves ahead
@@ -84,11 +85,15 @@ export class Quiz {
         console.log("send leaderboard")
         this.currentState = "leaderboard"
         const leaderboard = this.getLeaderboard();
-        IoManager.getIo().to(this.roomId).emit("leaderboard", {
+        IoManager.getIo().to(this.quizId).emit("leaderboard", {
             leaderboard
         })
+        setTimeout(() => {
+            this.next();
+        }, PROBLEM_TIME_S * 1000);
     }
     next() {
+        console.log("next problem")
         this.activeProblem++;
         const problem = this.problems[this.activeProblem];
         if (problem) {
@@ -96,9 +101,9 @@ export class Quiz {
         } else {
             this.activeProblem--;
             // send final results here
-            // IoManager.getIo().emit("QUIZ_END", {
-            //     problem
-            // })
+            IoManager.getIo().to(this.quizId).emit("QUIZ_END", {
+                problem
+            })
         }
     }
     genRandonString(length: number) {
@@ -120,8 +125,6 @@ export class Quiz {
         return id;
     }
     submit(userId: string, roomId: string, problemId: string, submission: AllowedSubmissions) {
-        console.log("userId");
-        console.log(userId);
         const problem = this.problems.find(x => x.id == problemId);
         const user = this.users.find(x => x.id === userId);
  
@@ -150,7 +153,7 @@ export class Quiz {
     }
 
     getCurrentState() {
-        if (this.currentState === "not_started") {
+        if (!this.hasStarted) {
             return {
                 type: "not_started"
             }

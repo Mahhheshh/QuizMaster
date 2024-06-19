@@ -6,14 +6,14 @@ export function Quiz({
   socket,
   userId,
   problemId,
-  roomId,
+  quizId,
 }: {
   quizData: {
     title: string;
     options: [{ id: number; title: string }];
   };
   socket: Socket;
-  roomId: string;
+  quizId: string;
   userId: string;
   problemId: string;
 }) {
@@ -44,7 +44,7 @@ export function Quiz({
                 userId,
                 problemId,
                 submission: Number(submission),
-                roomId,
+                quizId,
               });
             }}
           >

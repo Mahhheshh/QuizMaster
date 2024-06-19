@@ -74,7 +74,7 @@ export const UserLoggedin = ({
   code: string;
 }) => {
   const [socket, setSocket] = useState<null | Socket>(null);
-  const roomId = code;
+  const quizId = code;
   const [currentState, setCurrentState] = useState("not_started");
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderBoardData[]>([]);
@@ -85,9 +85,8 @@ export const UserLoggedin = ({
     setSocket(socket);
 
     socket.on("connect", () => {
-      console.log(socket.id);
       socket.emit("join", {
-        roomId,
+        quizId,
         name,
       });
     });
@@ -111,10 +110,16 @@ export const UserLoggedin = ({
       console.log(data);
       setLeaderboard(data.leaderboard);
     });
+
     socket.on("problem", (data) => {
       setCurrentState("question");
       setCurrentQuestion(data.problem);
     });
+
+    socket.on("QUIZ_END", (data) => {
+      setCurrentState("end");
+    } )
+
   }, []);
 
   if (currentState === "not_started") {
@@ -127,7 +132,7 @@ export const UserLoggedin = ({
     }
     return (
       <Quiz
-        roomId={roomId}
+      quizId={quizId}
         userId={userId}
         problemId={currentQuestion.id}
         quizData={{
@@ -146,7 +151,6 @@ export const UserLoggedin = ({
   return (
     <div className="text-slate-600">
       Quiz has ended
-      {currentState}
     </div>
   );
 };

@@ -22,10 +22,10 @@ const mockOptions = [
 
 export const CreateProblem = ({
   socket,
-  roomId,
+  quizId,
 }: {
   socket: Socket;
-  roomId: string;
+  quizId: string;
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -85,6 +85,7 @@ export const CreateProblem = ({
                 placeholder="Options"
                 style={{ fontSize: "1rem" }}
                 type="text"
+                value={options[optionId].title}
                 onChange={(e) => {
                   console.log(`${options}`);
                   setOptions((options) =>
@@ -110,7 +111,7 @@ export const CreateProblem = ({
         onClick={(e: React.FormEvent<HTMLButtonElement>) => {
           e.preventDefault();
           socket.emit("createProblem", {
-            roomId,
+            quizId,
             problem: {
               title,
               description,
