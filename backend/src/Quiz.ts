@@ -4,9 +4,9 @@ import { IoManager } from "./managers/IoManager";
 export type AllowedSubmissions = 0 | 1 | 2 | 3;
 const PROBLEM_TIME_S = 20;
 
-interface User {
-    name: string;
+interface Participant {
     id: string;
+    name: string;
     points: number;
 }
 
@@ -35,7 +35,7 @@ export class Quiz {
     private hasStarted: boolean;
     private problems: Problem[];
     private activeProblem: number;
-    private users: User[];
+    private participants: Participant[];
     private currentState: "leaderboard" | "question" | "not_started" | "ended";
     
     constructor(quizId: string) {
@@ -43,7 +43,7 @@ export class Quiz {
         this.hasStarted = false;
         this.problems = []
         this.activeProblem = 0;
-        this.users = [];
+        this.participants = [];
         this.currentState = "not_started";
         setInterval(() => {
             this.debug();
@@ -54,7 +54,7 @@ export class Quiz {
         console.log("----debug---")
         console.log(`roomId: ${this.quizId}`)
         console.log('Problem:',JSON.stringify(this.problems))
-        console.log('Joined users', this.users)
+        console.log('Joined users', this.participants)
         console.log(this.currentState)
         console.log("Active problem",this.activeProblem);
         console.log("total problems", this.problems.length);
@@ -117,7 +117,7 @@ export class Quiz {
      }
     addUser(name: string) {
         const id = this.genRandonString(7);
-        this.users.push({
+        this.participants.push({
             id,
             name,
             points: 0
@@ -126,7 +126,7 @@ export class Quiz {
     }
     submit(userId: string, roomId: string, problemId: string, submission: AllowedSubmissions) {
         const problem = this.problems.find(x => x.id == problemId);
-        const user = this.users.find(x => x.id === userId);
+        const user = this.participants.find(x => x.id === userId);
  
         if (!problem || !user) {
             console.log("problem or user not found")
@@ -149,7 +149,7 @@ export class Quiz {
     }
 
     getLeaderboard() {
-        return this.users.sort((a, b) => a.points < b.points ? 1 : -1).slice(0, 20);;
+        return this.participants.sort((a, b) => a.points < b.points ? 1 : -1).slice(0, 20);;
     }
 
     getCurrentState() {
