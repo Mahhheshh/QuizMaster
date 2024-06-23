@@ -1,9 +1,9 @@
 
 import { IoManager } from "./managers/IoManager";
 
-export type AllowedSubmissions = 0 | 1 | 2 | 3;
 const PROBLEM_TIME_S = 20;
 
+export type AllowedSubmissions = 0 | 1 | 2 | 3;
 interface Participant {
     id: string;
     name: string;

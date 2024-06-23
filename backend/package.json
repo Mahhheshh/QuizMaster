@@ -19,6 +19,14 @@
   },
   "homepage": "https://github.com/hkirat/quiz-app-next#readme",
   "dependencies": {
-    "socket.io": "^4.7.2"
+    "@prisma/client": "^5.15.1",
+    "socket.io": "^4.7.2",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.5",
+    "prisma": "^5.15.1",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5"
   }
 }
