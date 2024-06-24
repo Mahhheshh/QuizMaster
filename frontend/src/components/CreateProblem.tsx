@@ -81,13 +81,13 @@ export const CreateProblem = ({
                 {optionId}:
               </label>
               <input
+                id={`${optionId}`}
                 className="bg-gray-300 text-center p-2 border-2 border-purple-600 rounded-lg shadow-sm focus:outline-none focus:border-purple-800 ml-2"
                 placeholder="Options"
                 style={{ fontSize: "1rem" }}
                 type="text"
                 value={options[optionId].title}
                 onChange={(e) => {
-                  console.log(`${options}`);
                   setOptions((options) =>
                     options.map((x) => {
                       if (x.id === optionId) {
@@ -112,11 +112,11 @@ export const CreateProblem = ({
           e.preventDefault();
           socket.emit("createProblem", {
             quizId,
-            problem: {
+            problemData: {
               title,
               description,
               options,
-              answer,
+              correctOption: answer,
             },
           });
           setTitle("");

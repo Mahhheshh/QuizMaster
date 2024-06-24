@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { io } from "socket.io-client";
-// import { CurrentQuestion } from "./CurrentQuestion";
 import { LeaderBoard, LeaderBoardData } from "./leaderboard/LeaderBoard";
 import { Quiz } from "./Quiz";
 import { Link } from "react-router-dom";
@@ -75,10 +74,10 @@ export const UserLoggedin = ({
 }) => {
   const [socket, setSocket] = useState<null | Socket>(null);
   const quizId = code;
-  const [currentState, setCurrentState] = useState("not_started");
+  const [currentState, setCurrentState] = useState("NOT_STARTED");
   const [currentQuestion, setCurrentQuestion] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderBoardData[]>([]);
-  const [userId, setUserId] = useState("");
+  const [userId, setUserId] = useState("12345");
 
   useEffect(() => {
     const socket = io("http://127.0.0.1:3000");
@@ -91,52 +90,54 @@ export const UserLoggedin = ({
       });
     });
 
-    socket.on("init", ({ userId, state }) => {
-      setUserId(userId);
+    socket.on("init", ({ userId, stateData }) => {
+      setUserId(String(userId));
 
-      if (state.leaderboard) {
-        setLeaderboard(state.leaderboard);
+      if (stateData.state == "LEADERBOARD") {
+        setLeaderboard(stateData.data);
       }
 
-      if (state.problem) {
-        setCurrentQuestion(state.problem);
+      if (stateData.state == "QUESTION") {
+        setCurrentQuestion(stateData.problem);
       }
 
-      setCurrentState(state.type);
+      setCurrentState(stateData.state);
     });
 
-    socket.on("leaderboard", (data) => {
-      setCurrentState("leaderboard");
-      console.log(data);
-      setLeaderboard(data.leaderboard);
+    socket.on("leaderboard", ({state, data}) => {
+      setCurrentState(state);
+      setLeaderboard(data);
     });
 
-    socket.on("problem", (data) => {
-      setCurrentState("question");
-      setCurrentQuestion(data.problem);
+    socket.on("problem", ({state, problem}) => {
+      setCurrentState(state);
+      setCurrentQuestion(problem);
     });
 
     socket.on("QUIZ_END", (data) => {
-      setCurrentState("end");
-    } )
+      console.log(data);
+      setCurrentState("END");
+    });
 
   }, []);
 
-  if (currentState === "not_started") {
+
+  if (currentState === "NOT_STARTED") {
     return <div className="text-slate-600">This quiz hasnt started yet</div>;
   }
 
-  if (currentState === "question") {
+  if (currentState === "QUESTION" && currentQuestion) {
     if (!socket) {
       throw new Error("Unable to Establish connection");
     }
     return (
       <Quiz
-      quizId={quizId}
+        quizId={quizId}
         userId={userId}
         problemId={currentQuestion.id}
         quizData={{
-          title: currentQuestion.description,
+        title: currentQuestion.title,
+          description: currentQuestion.description,
           options: currentQuestion.options,
         }}
         socket={socket}
@@ -144,13 +145,9 @@ export const UserLoggedin = ({
     );
   }
 
-  if (currentState === "leaderboard") {
+  if (currentState === "LEADERBOARD") {
     return <LeaderBoard leaderboardData={leaderboard} />;
   }
 
-  return (
-    <div className="text-slate-600">
-      Quiz has ended
-    </div>
-  );
+  return <div className="text-slate-600">Quiz has ended</div>;
 };

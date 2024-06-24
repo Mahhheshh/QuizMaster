@@ -1,6 +1,7 @@
 import Card from "./Card";
 
 export type LeaderBoardData = {
+  id: number;
   points: number;
   name: string;
   image: string;
@@ -17,14 +18,14 @@ export function LeaderBoard({
         Leaderboard Results 🚀
       </h1>
       <div className="">
-        {leaderboardData.map((el, index) => (
+        {leaderboardData.map((data, index) => (
           <div className=" flex justify-center">
             <Card
-              key={index*el.points}
+              key={data.id}
               sno={index + 1}
-              name={el.name}
-              points={el.points}
-              image={el.image}
+              name={data.name}
+              points={data.points}
+              image={data?.image}
             />
           </div>
         ))}

@@ -4,12 +4,12 @@ import { Socket } from "socket.io-client";
 export function Quiz({
   quizData,
   socket,
-  userId,
   problemId,
-  quizId,
+  userId
 }: {
   quizData: {
     title: string;
+    description?: string;
     options: [{ id: number; title: string }];
   };
   socket: Socket;
@@ -17,7 +17,6 @@ export function Quiz({
   userId: string;
   problemId: string;
 }) {
-  console.log(quizData);
   const [submitted, setSubmitted] = useState(false);
   const [submission, setSubmission] = useState(0);
 
@@ -30,8 +29,9 @@ export function Quiz({
       <div className="flex flex-col min-w-64">
         <>
           <SingleQuiz
-            choices={quizData.options.map((x) => x.title)}
+            choices={quizData.options}
             title={quizData.title}
+            selected={submission}
             imageURL={""}
             setSelected={handleSubmission}
           />
@@ -41,10 +41,9 @@ export function Quiz({
             onClick={() => {
               setSubmitted(true);
               socket.emit("submit", {
-                userId,
+                userId: userId,
                 problemId,
-                submission: Number(submission),
-                quizId,
+                selected: submission
               });
             }}
           >
@@ -58,13 +57,15 @@ export function Quiz({
 
 type SingleQuizProps = {
   title: string;
-  choices: string[];
+  choices: [{ id: number; title: string }];
+  selected: number,
   imageURL?: string;
   setSelected: (optionNo: number) => void;
 };
 function SingleQuiz({
   title,
   choices,
+  selected,
   imageURL,
   setSelected,
 }: SingleQuizProps) {
@@ -73,18 +74,18 @@ function SingleQuiz({
       <div className="my-4 text-2xl lg:text-4xl font-bold">{title}</div>
       {imageURL && <img src={imageURL} alt="" />}
       {choices.length &&
-        choices.map((choice, index) => {
+        choices.map((x, index) => {
           return (
             <div
-              key={index}
-              className="mb-2 p-4 lg:p-6 rounded-lg lg:rounded-3xl text-left text-black 
-                focus-within:outline outline-purple-300 
-                border hover:border hover:bg-purple-300 transition duration-200 ease-in-out flex items-center w-full mt-4 cursor-pointer"
+              key={x.id}
+              className={`mb-2 p-4 lg:p-6 rounded-lg lg:rounded-3xl text-left text-black 
+                ${selected === index ? 'bg-purple-300 focus:outline-none' : 'hover:outline-purple-300 border hover:border'}
+                transition duration-200 ease-in-out flex items-center w-full mt-4 cursor-pointer`}
               onClick={() => {
                 setSelected(index);
               }}
             >
-              <p className="text-center">{choice}</p>
+              <p className="text-center">{x.title}</p>
             </div>
           );
         })}
