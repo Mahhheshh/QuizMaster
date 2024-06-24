@@ -8,12 +8,15 @@
 - Users should be allowed to answer the questions
 - Users just need to poll the server for the next question, no need for it to be realtime
 
-## Bounties for frontend $$
- - Simple View with title and answers - $25
-    title : string
-    choices: strings[]
-    image?: string
- - Leaderboard view - $25
-    winners: {username: string, profilePicture?: string, points: number}[] => will be sorted
- - Join the course view - $10
- Stack - React components using tailwind
+## Preview
+
+#### Home 
+![](images/preview/Home.png)
+#### Create Quest
+![](images/preview/createQuest.png)
+#### Join Room/Quest
+![](images/preview/JoinRoom.png)
+#### Answer Questions
+![](images/preview/Quiz.png)
+#### Leader Board
+![](images/preview/LeaderBoard.png)
