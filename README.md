@@ -2,11 +2,13 @@
 
 ## Features
 
-- Admin should be allowed to add questions (MCQ, single answer)
-- Admin should be allowed to move to the next questions
-- Admin should be allowed to show the leaderboard to everyone
-- Users should be allowed to answer the questions
-- Users just need to poll the server for the next question, no need for it to be realtime
+- [X] Admin should be alble to create Quized
+- [X] Admin should be allowed to add questions to quizes (MCQ, single answer)
+- [ ] Admin should be allowed to move to the next questions
+- [ ] Admin should be allowed to show the leaderboard to everyone
+- [X] Users should be allowed to answer the questions
+- [X] Make a Dashboard for admin, to edit the quies.
+- [X] Admin/User should be able to see the questions at same time.
 
 ## Preview
 
