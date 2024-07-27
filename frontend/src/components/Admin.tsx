@@ -10,7 +10,7 @@ export const Admin = () => {
   const [quizId, setQuizId] = useState("");
 
   useEffect(() => {
-    const socket = io("http://127.0.0.1:3000");
+    const socket = io("http://127.0.0.1:3001");
     setSocket(socket);
 
     socket.on("connect", () => {

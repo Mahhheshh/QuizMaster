@@ -1,14 +1,50 @@
 import { PrismaClient } from '@prisma/client'
+
 import { Problem, Participants } from './types';
 import { QuizState } from './types';
 
 const prisma = new PrismaClient();
 
-export async function createQuiz() {
+export async function createUser(email: string) {
+    const name = email.substring(0, email.indexOf("@"));
+    return await prisma.user.create({
+        data: {
+            name: name,
+            email: email
+        }
+    })
+}
+
+export async function getUserByEmail(email: string) {
+    const user = await prisma.user.findFirst({
+        where: {
+            email: email,
+        }
+    })
+    return user;
+}
+
+export async function getOrCreateUser(email: string) {
+    let user = await getUserByEmail(email);
+    if (!user) {
+        user = await createUser(email);
+    }
+    return user;
+}
+
+export async function getUserById(id: number) {
+    return await prisma.user.findFirst({
+        where:{
+            id: id
+        }
+    })
+} 
+
+export async function createQuiz(userId: number) {
     return await prisma.quiz.create({
         data: {
-            state: QuizState.NOT_STARTED 
-        },
+            userId: userId
+        }
     });
 }
 

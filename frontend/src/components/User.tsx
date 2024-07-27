@@ -80,7 +80,7 @@ export const UserLoggedin = ({
   const [userId, setUserId] = useState("12345");
 
   useEffect(() => {
-    const socket = io("http://127.0.0.1:3000");
+    const socket = io("http://127.0.0.1:3001");
     setSocket(socket);
 
     socket.on("connect", () => {

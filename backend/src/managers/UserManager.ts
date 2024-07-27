@@ -135,7 +135,7 @@ export class UserManager {
       }
 
       socket.on("createQuiz", async () => {
-        const quiz = await createQuiz();
+        const quiz = await createQuiz(1); // TODO: fix this
         if (!quiz) {
           return;
         }
