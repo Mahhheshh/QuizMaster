@@ -2,7 +2,7 @@
 
 ## Features
 
-- [X] Admin should be alble to create Quized
+- [X] Admin should be alble to create Quizes
 - [X] Admin should be allowed to add questions to quizes (MCQ, single answer)
 - [ ] Admin should be allowed to move to the next questions
 - [ ] Admin should be allowed to show the leaderboard to everyone
@@ -18,6 +18,10 @@
 ![](images/preview/createQuest.png)
 #### Join Room/Quest
 ![](images/preview/JoinRoom.png)
+### Dashboard (Admin)
+![](images/preview/Dashboard.png)
+### Edit Quiz (Admin)
+![](images/preview/QuizEdit.png)
 #### Answer Questions
 ![](images/preview/Quiz.png)
 #### Leader Board

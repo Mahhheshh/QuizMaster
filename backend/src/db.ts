@@ -3,7 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { Problem, Participants } from './types';
 import { QuizState } from './types';
 
-const prisma = new PrismaClient();
+export const prisma = new PrismaClient();
 
 export async function createUser(email: string) {
     const name = email.substring(0, email.indexOf("@"));
@@ -39,6 +39,22 @@ export async function getUserById(id: number) {
         }
     })
 } 
+
+export async function getUserQuizes(id: number) {
+    return await prisma.quiz.findMany({
+        where: {
+            userId: id
+        },
+        orderBy: {
+            id: "desc"
+        },
+        select: {
+            id: true,
+            currentProblem: true,
+            state: true
+        }
+    })
+}
 
 export async function createQuiz(userId: number) {
     return await prisma.quiz.create({
@@ -76,13 +92,15 @@ export async function addQuizParticipants(participants: Participants) {
     })
 }
 
-export async function updateCurrentProblem(quizId: number, currentProblem: number) {
+export async function updateCurrentProblem(quizId: number) {
     return await prisma.quiz.update({
         where: {
             id: quizId
         },
         data: {
-            currentProblem: currentProblem
+            currentProblem: {
+                increment: 1
+            }
         },
     })
 }
@@ -173,7 +191,9 @@ export async function updateUserPoints(quizId: number, participantId: number, po
             quizId: quizId
         },
         data: {
-            points: points
+            points: {
+                increment: points
+            }
         }
     })
 }

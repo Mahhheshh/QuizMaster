@@ -1,7 +1,5 @@
 import { Socket } from "socket.io";
 import {
-  createProblem,
-  createQuiz,
   getQuiz,
   updateQuizState,
   addQuizParticipants,
@@ -9,14 +7,13 @@ import {
   updateProblemTime,
   updateUserPoints,
   updateCurrentProblem,
-  getDbProblem
+  getDbProblem,
 } from "../db";
 
-import { Problem, QuizState } from "../types";
+import { QuizState } from "../types";
 import { IoManager } from "./IoManager";
 
-const ADMIN_PASSWORD = "ADMIN_PASSWORD";
-const TIMER = 1000 * 1 * 5;
+const TIMER = 1000 * 1 * 10;
 
 async function getProblem(quiz: any) {
   try {
@@ -25,30 +22,29 @@ async function getProblem(quiz: any) {
       IoManager.getIo().to(String(quiz.id)).emit("QUIZ_END", {});
       return;
     }
-    console.log("updating quiz state");
     updateQuizState(quiz.id, QuizState.QUESTION);
-    IoManager.getIo().to(String(quiz.id)).emit("problem", {
+    IoManager.getIo().to(String(quiz.id)).emit("PROBLEM", {
       state: QuizState.QUESTION,
       problem: quiz.problems[quiz.currentProblem],
-    })
-    console.log("currentProblem", quiz.problems[quiz.currentProblem]);
+    });
     await updateProblemTime(quiz.problems[quiz.currentProblem].id);
     setTimeout(async () => {
       await getLeaderboardData(quiz);
-    }, TIMER)
+    }, TIMER);
   } catch (error) {
     console.error("Error in getProblem:", error);
   }
 }
 
-async function startQuiz(quizId: number) {
+export async function startQuiz(quizId: number) {
   try {
-    console.log("inside startQUiz", quizId);
     const quiz = await getQuiz(quizId);
     if (!quiz) {
       return new Error("Invalid QUiz id");
     }
-    await getProblem(quiz);
+    setTimeout(async () => {
+      await getProblem(quiz);
+    }, 5 * 1000);
   } catch (error) {
     console.error("Error in startQuiz:", error);
   }
@@ -56,18 +52,17 @@ async function startQuiz(quizId: number) {
 
 async function getLeaderboardData(quiz: any) {
   try {
-    const nextProblem = quiz.currentProblem++;
-    console.log("next problem", nextProblem);
-    await updateCurrentProblem(quiz.id, nextProblem);
+    await updateCurrentProblem(quiz.id);
+    quiz.currentProblem++;
     await updateQuizState(quiz.id, QuizState.LEADERBOARD);
     const data = await getLeaderboard(quiz.id);
-    IoManager.getIo().to(String(quiz.id)).emit("leaderboard", {
+    IoManager.getIo().to(String(quiz.id)).emit("LEADERBOARD", {
       state: QuizState.LEADERBOARD,
       data: data,
     });
     setTimeout(async () => {
-      await getProblem(quiz)
-    }, TIMER)
+      await getProblem(quiz);
+    }, TIMER);
   } catch (error) {
     console.error("Error in getLeaderboardData:", error);
   }
@@ -86,7 +81,7 @@ async function getStateData(quizId: number) {
       };
     } else if (quiz.state === QuizState.END) {
       return {
-        state: quiz.state,
+        state: "QUIZ_END",
         msg: "Quiz Has Ended!",
       };
     } else if (quiz.state === QuizState.QUESTION) {
@@ -114,54 +109,78 @@ export class UserManager {
 
   private createHandlers(socket: Socket) {
     socket.on(
-      "join",
-      async ({ quizId, name }: { name: string; quizId: string }) => {
+      "USER_JOIN",
+      async ({ quizId, userName }: { quizId: string; userName: string }) => {
+        if (!socket.rooms.has(socket.id)) {
+          socket.join(quizId);
+        }
         const participant = await addQuizParticipants({
-          name: name,
+          name: userName,
           quizId: Number(quizId),
           points: 0,
         });
-        socket.join(quizId);
-        socket.emit("init", {
+        IoManager.getIo().to(quizId).emit("INIT_USER", {
           userId: participant.id,
-          stateData: await getStateData(Number(quizId)),
         });
       }
     );
 
-    socket.on("joinAdmin", async ({ password }: { password: string }) => {
-      if (password !== ADMIN_PASSWORD) {
-        return;
-      }
+    socket.on(
+      "QUIZ_JOIN",
+      async ({ quizId, userName }: { quizId: string; userName?: string }) => {
+        console.log(`${socket.id}:${userName} joining the quiz! ${quizId}`);
+        socket.join(quizId);
 
-      socket.on("createQuiz", async () => {
-        const quiz = await createQuiz(1); // TODO: fix this
-        if (!quiz) {
+        if (!userName) {
+          console.log("Admin joined...");
           return;
         }
-        socket.emit("quizCreated", {
-          quizId: quiz.id,
+
+        const participant = await addQuizParticipants({
+          name: userName,
+          quizId: Number(quizId),
+          points: 0,
         });
-      });
+        IoManager.getIo().local.emit("INIT_USER", {
+          userId: participant.id,
+        });
+      }
+    );
 
-      socket.on("createProblem", async({quizId, problemData}: {quizId: string, problemData: Problem}) => {
-        await createProblem(Number(quizId), problemData);
-      })
-
-      socket.on("startQuiz", async ({ quizId }: { quizId: string }) => {
-        console.log("quizStarted,", quizId)
-        await startQuiz(Number(quizId));
-      });
-
-      socket.on("next", async (data) => {});
-    });
-
-    socket.on("submit", async ({ userId, problemId, selected }) => {
-      const problem = await getDbProblem(Number(problemId));
-      if (problem && problem.correctOption === selected) {
-        const points = Math.max(Math.floor(1000 - (500 * (new Date().getTime() - problem.startTime) / (20 * 1000))), 0);
-        await updateUserPoints(problem.quizId, Number(userId), points);
+    socket.on("INIT_STATE", async ({ quizId }: { quizId: string }) => {
+      try {
+        const stateData = await getStateData(Number(quizId));
+        IoManager.getIo().to(quizId).emit("INIT_STATE", {
+          stateData: stateData,
+        });
+      } catch (err) {
+        console.log(err);
       }
     });
+
+    socket.on(
+      "submit",
+      async ({
+        userId,
+        problemId,
+        selected,
+      }: {
+        userId: string;
+        problemId: string;
+        selected: number;
+      }) => {
+        const problem = await getDbProblem(Number(problemId));
+        if (problem && problem.correctOption === selected) {
+          const points = Math.max(
+            Math.floor(
+              1000 -
+                (500 * (new Date().getTime() - problem.startTime)) / (20 * 1000)
+            ),
+            0
+          );
+          await updateUserPoints(problem.quizId, Number(userId), points);
+        }
+      }
+    );
   }
 }

@@ -1,49 +1,82 @@
-import { Socket } from "socket.io-client";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
-export const QuizControls = ({
-  socket,
-  quizId,
-}: {
-  socket: Socket;
-  quizId: string;
-}) => {
-  const location = useLocation();
+export const QuizControls = ({ quizId }: { quizId: number }) => {
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
+
+  const startQuiz = async () => {
+    const response = await fetch("/api/admin/quiz/start", {
+      method: "POST",
+      headers: {
+        Accept: "appication/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        quizId: quizId,
+      }),
+    });
+    if (!response.ok) {
+      console.log("failed to start the quiz!");
+      alert("Please try again later!")
+    }
+    navigate("/play", { state: { quizId: quizId, isAdmin: true } });
+  };
+
+  // const skipProblem = async () => {
+  //   const response = await fetch("/api/admin/problem/skip", {
+  //     method: "POST",
+  //     headers: {
+  //       Accept: "application/json",
+  //       "Content-Type": "application/json",
+  //     },
+  //     body: JSON.stringify({
+  //       quizId: quizId,
+  //     }),
+  //   });
+  //   if (!response.ok) {
+  //     console.log("failed to start the quiz!");
+  //   }
+  // };
 
   return (
-    <div className="rounded-lg shadow-xl px-4 py-6 lg:mx-5 mt-5">
-      <div className="text-slate-600 flex flex-col">
-        <h2 className="text-xl font-medium mb-2">Quiz Controls</h2>
-        <p className="text-sm">RoomId</p>
-        <div className="p-4 mb-2 outline-purple-300 focus-within:outline rounded-md border">
+    <div className="rounded-lg shadow-md p-3 mb-3 text-slate-700 flex justify-between">
+      <div className="flex flex-row justify-evenly">
+        <p className="self-center text-sm mr-2">RoomId</p>
+        <div className="p-2 outline-purple-300 focus-within:outline rounded-md border">
           {quizId}
         </div>
-        {location.pathname === "/createQuiz" ? (
-          <button
-            className="bg-purple-600 text-white py-2 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50 mb-5"
-            style={{ fontSize: "1rem" }}
-            onClick={(e: React.FormEvent<HTMLButtonElement>) => {
-              e.preventDefault();
-              socket.emit("startQuiz", {
-                quizId,
-              });
-            }}
-          >
-            Start Quiz
-          </button>
-        ) : (
-          <button
-            className="bg-purple-600 text-white py-2 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50 mb-5"
-            onClick={() => {
-              socket.emit("next", {
-                quizId,
-              });
-            }}
-          >
-            Next problem
-          </button>
-        )}
       </div>
+
+      {pathname === "/quiz" ? (
+        <button
+          className="bg-purple-600 text-white self-center w-28 h-12 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
+          onClick={async (e) => {
+            e.preventDefault();
+            await startQuiz();
+          }}
+        >
+          Start Quiz
+        </button>
+      ) : (
+        <>
+          <button
+            className="text-sm bg-purple-600 text-white self-center w-28 h-12 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
+            onClick={async (e) => {
+              e.preventDefault();
+            }}
+          >
+            Next Problem
+          </button>
+          <button
+            className="text-sm bg-purple-600 text-white self-center w-28 h-12 rounded-lg shadow-xl hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-800 focus:ring-opacity-50"
+            onClick={async (e) => {
+              e.preventDefault();
+            }}
+          >
+            Show Leaderboard
+          </button>
+        </>
+      )}
     </div>
   );
 };
