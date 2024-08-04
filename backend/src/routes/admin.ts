@@ -26,7 +26,7 @@ const adminMiddleWare = async (
   next: NextFunction
 ) => {
   // TODO: remove this before commiting, for testing only
-  req.user = (await getUserById(1)) as RequestUser;
+  // req.user = (await getUserById(1)) as RequestUser;
   if (!req.user) {
     return res.status(401).json({ message: "Unauthorized access!" });
   }

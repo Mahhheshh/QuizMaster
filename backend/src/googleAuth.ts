@@ -27,7 +27,7 @@ passport.use(
 passport.serializeUser(async (user: any, done: (error: any, id?: any) => void) => {
   const email = user.emails.length > 0 ? user.emails[0].value : null;
   if (!email) {
-    return done("Unable to access Email", 1);
+    return done(new Error("Unable to get the Email"));
   }
   const dbUser = await getOrCreateUser(email);
   return done(null, dbUser.id);
